@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>My TODOs</h2>
+
+<!-- Create TODO Form -->
+<form method="POST" action="{% url 'todo_create' %}">
+    {% csrf_token %}
+    <h3>Add New TODO</h3>
+    <input type="text" name="title" placeholder="Title" required>
+    <textarea name="description" placeholder="Description" rows="3"></textarea>
+    <input type="date" name="due_date" placeholder="Due Date">
+    <button type="submit" class="btn-primary">Add TODO</button>
+</form>
+
+<!-- TODO List -->
+<div>
+    {% for todo in todos %}
+    <div class="todo-item {% if todo.is_resolved %}resolved{% endif %}">
+        <div>
+            <h4>{{ todo.title }}</h4>
+            <p>{{ todo.description }}</p>
+            {% if todo.due_date %}<small>Due: {{ todo.due_date }}</small>{% endif %}
+        </div>
+        <div>
+            {% if not todo.is_resolved %}
+            <form method="POST" action="{% url 'todo_resolve' todo.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-success">Resolve</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'todo_edit' todo.pk %}" class="btn btn-primary">Edit</a>
+            <form method="POST" action="{% url 'todo_delete' todo.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <p>No TODOs yet. Create one above!</p>
+    {% endfor %}
+</div>
+{% endblock %}

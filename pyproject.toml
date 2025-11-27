@@ -1,0 +1,12 @@
+[project]
+name = "ai-zc-2025"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "black>=25.11.0",
+    "django>=5.2.8",
+    "pytest>=9.0.1",
+    "pytest-django>=4.11.1",
+]
