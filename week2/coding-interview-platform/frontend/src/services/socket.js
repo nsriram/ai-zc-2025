@@ -1,6 +1,23 @@
 import { io } from 'socket.io-client'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
+// Use environment variable in development, or dynamically determine URL in production
+const getSocketUrl = () => {
+  // If we have an explicit env var set (for development), use it
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL
+  }
+
+  // In production, use the same origin as the current page
+  // This works because the backend serves both the frontend and handles WebSockets
+  if (import.meta.env.PROD) {
+    return window.location.origin
+  }
+
+  // Fallback for development if no env var is set
+  return 'http://localhost:3000'
+}
+
+const SOCKET_URL = getSocketUrl()
 
 let socket = null
 

@@ -1,59 +1,61 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+// Use environment variable in development, or dynamically determine URL in production
+const getApiBaseUrl = () => {
+  // If we have an explicit env var set (for development), use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
 
-const mockSessions = new Map()
+  // In production, use the same origin as the current page
+  if (import.meta.env.PROD) {
+    return `${window.location.origin}/api`
+  }
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 15)
+  // Fallback for development if no env var is set
+  return 'http://localhost:3000/api'
 }
 
+const API_BASE_URL = getApiBaseUrl()
+
 export async function createSession(data) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const session = {
-        id: generateId(),
-        name: data.name,
-        language: data.language,
-        code: getDefaultCode(data.language),
-        createdAt: new Date().toISOString(),
-      }
-      mockSessions.set(session.id, session)
-      resolve(session)
-    }, 300)
+  const response = await fetch(`${API_BASE_URL}/sessions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   })
+
+  if (!response.ok) {
+    throw new Error('Failed to create session')
+  }
+
+  return response.json()
 }
 
 export async function getSession(sessionId) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const session = mockSessions.get(sessionId)
-      if (session) {
-        resolve(session)
-      } else {
-        const newSession = {
-          id: sessionId,
-          name: 'Interview Session',
-          language: 'javascript',
-          code: getDefaultCode('javascript'),
-          createdAt: new Date().toISOString(),
-        }
-        mockSessions.set(sessionId, newSession)
-        resolve(newSession)
-      }
-    }, 200)
-  })
+  const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch session')
+  }
+
+  return response.json()
 }
 
 export async function updateSessionCode(sessionId, code) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const session = mockSessions.get(sessionId)
-      if (session) {
-        session.code = code
-        mockSessions.set(sessionId, session)
-      }
-      resolve({ success: true })
-    }, 100)
+  const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code }),
   })
+
+  if (!response.ok) {
+    throw new Error('Failed to update session')
+  }
+
+  return response.json()
 }
 
 function getDefaultCode(language) {
