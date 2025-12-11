@@ -1,0 +1,293 @@
+openapi: 3.0.0
+info:
+  title: Coding Interview Platform API
+  description: REST API for managing coding interview sessions with real-time collaboration
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+tags:
+  - name: Sessions
+    description: Interview session management
+  - name: WebSocket
+    description: Real-time collaboration events
+
+paths:
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new interview session
+      description: Creates a new interview session with a unique ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - language
+              properties:
+                name:
+                  type: string
+                  description: Name of the interview session
+                  example: "Frontend Developer Interview"
+                language:
+                  type: string
+                  description: Default programming language for the session
+                  enum: [javascript, python, java, cpp, go, typescript]
+                  example: javascript
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/{sessionId}:
+    get:
+      tags:
+        - Sessions
+      summary: Get session details
+      description: Retrieve information about a specific interview session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+            example: "abc123xyz"
+      responses:
+        '200':
+          description: Session found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Sessions
+      summary: Update session code
+      description: Update the code content for a session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Updated code content
+                language:
+                  type: string
+                  description: Programming language
+                  enum: [javascript, python, java, cpp, go, typescript]
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sessions/{sessionId}/users:
+    get:
+      tags:
+        - Sessions
+      summary: Get active users in session
+      description: Retrieve list of users currently connected to the session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of active users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique session identifier
+          example: "abc123xyz"
+        name:
+          type: string
+          description: Session name
+          example: "Frontend Developer Interview"
+        language:
+          type: string
+          description: Programming language
+          enum: [javascript, python, java, cpp, go, typescript]
+          example: javascript
+        code:
+          type: string
+          description: Current code content
+          example: "console.log('Hello, World!');"
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+          example: "2025-01-15T10:30:00Z"
+        users:
+          type: array
+          description: List of connected users
+          items:
+            $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User socket ID
+          example: "socket_abc123"
+        joinedAt:
+          type: string
+          format: date-time
+          description: When user joined the session
+          example: "2025-01-15T10:35:00Z"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Session not found"
+        code:
+          type: string
+          description: Error code
+          example: "SESSION_NOT_FOUND"
+
+  # WebSocket Events Documentation
+  x-websocket-events:
+    client-to-server:
+      join-session:
+        description: Join a specific interview session
+        payload:
+          type: object
+          properties:
+            sessionId:
+              type: string
+              description: Session ID to join
+
+      code-change:
+        description: Broadcast code changes to other users
+        payload:
+          type: object
+          properties:
+            sessionId:
+              type: string
+              description: Session ID
+            code:
+              type: string
+              description: Updated code content
+
+      language-change:
+        description: Change the programming language for the session
+        payload:
+          type: object
+          properties:
+            sessionId:
+              type: string
+              description: Session ID
+            language:
+              type: string
+              description: New programming language
+              enum: [javascript, python, java, cpp, go, typescript]
+
+    server-to-client:
+      code-update:
+        description: Receive code updates from other users
+        payload:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Updated code content
+            userId:
+              type: string
+              description: ID of user who made the change
+
+      users-update:
+        description: Receive updated list of connected users
+        payload:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  joinedAt:
+                    type: string
+
+      language-change:
+        description: Receive language change notification
+        payload:
+          type: object
+          properties:
+            language:
+              type: string
+              description: New programming language
+
+      error:
+        description: Receive error notifications
+        payload:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message

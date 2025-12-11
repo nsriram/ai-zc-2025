@@ -1,0 +1,21 @@
+{
+  "name": "frontend-integration-tests",
+  "version": "1.0.0",
+  "description": "Frontend integration tests with browser automation",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report"
+  },
+  "keywords": [
+    "integration-tests",
+    "playwright",
+    "e2e"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
