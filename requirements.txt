@@ -1,4 +1,8 @@
+jupyter
+tqdm
 Django
 pytest
 pytest-django
 black
+fastmcp
+minsearch
